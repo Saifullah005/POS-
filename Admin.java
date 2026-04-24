@@ -5,7 +5,11 @@ import java.time.DateTimeException;
 public class Admin extends User {
 
     // Stores all added products
-    private final ArrayList<Product> records = new ArrayList<>();
+    private ArrayList<Product> records = new ArrayList<>();
+    // Stores all the orders by month(After each month data is transfered to the
+    // database)
+    private ArrayList<Order> orderRecord = new ArrayList<>();
+    private ArrayList<ProductSummary> trackerList = new ArrayList<>();
 
     Admin() {
         super();
@@ -104,36 +108,57 @@ public class Admin extends User {
             System.out.println("Invalid date, order not executed");
             return;
         }
+        // We need to add sellingPrice and cost price in the place of m and y
+        orderRecord.add(new Order(id, pid, name, q, m, y, orderDate));
 
         System.out.println("The order was placed successfully.");
     }
 
-    public void checkInventory(){
+    public void updateQuantity(Order o) {
+        for (int i = 0; i < trackerList.size(); i++) {
+            ProductSummary ps = trackerList.get(i);
 
-        
-  if (records.isEmpty()) {
-        System.out.println("Inventory is empty.");
-        return;
+            if (ps.getProductId() == o.getProductId()) {
+                ps.addQuantity(o.getQuantity());
+                ps.addProfit(o.getProfit());
+                return;
+            }
+        }
+
+        trackerList.add(
+                new ProductSummary(
+                        o.getProductId(),
+                        o.getQuantity(),
+                        o.getProfit()));
     }
+
+    public void checkInventory() {
+        if (records.isEmpty()) {
+            System.out.println("Inventory is empty.");
+            return;
+        }
 
         System.out.println("The current Inventory is: ");
-      for(Product p : records){
-        System.out.println(p);
-        System.out.println("-------------------------");
-      }
+        for (Product p : records) {
+            System.out.println(p);
+            System.out.println("-------------------------");
+        }
     }
 
-    public void mostSelling(){
-
+    public ProductSummary mostSelling() {
+        MaxHeapByQuantity heap = new MaxHeapByQuantity();
+        for (ProductSummary ps : trackerList) {
+            heap.insert(ps);
+        }
+        return heap.getMax();
     }
-
     
-    public void mostProfitable(){
-
-    }
-
-    public void leastSelling(){
-
+    public ProductSummary mostProfitable() {
+        MaxHeapByProfit heap = new MaxHeapByProfit();
+        for (ProductSummary ps : trackerList) {
+            heap.insert(ps);
+        }
+        return heap.getMax();
     }
 
     public void changeAdminPassword() {
@@ -146,11 +171,11 @@ public class Admin extends User {
         changePassword(oldPass, newPass);
     }
 
-    public void logout(){
-       super.logout();
+    public void logout() {
+        super.logout();
     }
 
-    public void login(){
+    public void login() {
         System.out.println("=== login as an admin ===");
         System.out.println("Enter your password: ");
         String pass = sc.nextLine();
