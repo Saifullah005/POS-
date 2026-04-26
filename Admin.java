@@ -80,9 +80,6 @@ public class Admin extends User {
         System.out.println("Enter customer name: ");
         String name = sc.nextLine();
 
-        System.out.println("Enter customer address: ");
-        String address = sc.nextLine();
-
         System.out.println("Enter product ID: ");
         int pid = sc.nextInt();
 
@@ -109,9 +106,12 @@ public class Admin extends User {
             return;
         }
         // We need to add sellingPrice and cost price in the place of m and y
-        orderRecord.add(new Order(id, pid, name, q, m, y, orderDate));
+        Order o = new Order(id, pid, name, q, m, y, orderDate);
+        orderRecord.add(o);
+        updateQuantity(o);
 
         System.out.println("The order was placed successfully.");
+
     }
 
     public void updateQuantity(Order o) {
@@ -145,20 +145,83 @@ public class Admin extends User {
         }
     }
 
-    public ProductSummary mostSelling() {
-        MaxHeapByQuantity heap = new MaxHeapByQuantity();
-        for (ProductSummary ps : trackerList) {
-            heap.insert(ps);
-        }
-        return heap.getMax();
-    }
     
-    public ProductSummary mostProfitable() {
-        MaxHeapByProfit heap = new MaxHeapByProfit();
+    public ProductSummary mostSellingByMonth() {
+        MaxHeapByQuantity mostSelling;
+
+        mostSelling = new MaxHeapByQuantity();
         for (ProductSummary ps : trackerList) {
-            heap.insert(ps);
+            mostSelling.insert(ps);
         }
-        return heap.getMax();
+        return mostSelling.getMax();
+    }
+
+    public ProductSummary mostProfitableByMonth() {
+        MaxHeapByProfit mosProfit;
+        mosProfit = new MaxHeapByProfit();
+        for (ProductSummary ps : trackerList) {
+            mosProfit.insert(ps);
+        }
+        return mosProfit.getMax();
+    }
+
+    public ArrayList<ProductSummary> MergeDuplicates(LocalDate today){
+            ArrayList<ProductSummary> dailyTracker = new ArrayList<>();
+       
+        for (Order o : orderRecord) {
+
+            if (o.getDate().equals(today)) {
+
+                boolean found = false;
+
+                for (ProductSummary ps : dailyTracker) {
+                    if (ps.getProductId() == o.getProductId()) {
+                        ps.addQuantity(o.getQuantity());
+                        ps.addProfit(o.getProfit());
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    dailyTracker.add(
+                            new ProductSummary(
+                                    o.getProductId(),
+                                    o.getQuantity(),
+                                    o.getProfit()));
+                }
+
+            }
+        }
+        return dailyTracker;
+    }
+
+    public void DailymostSelling() {
+         LocalDate today = LocalDate.now();
+        ArrayList<ProductSummary>dailyTracker = MergeDuplicates(today);
+        ProductSummary max = null;
+        for (ProductSummary ps : dailyTracker) {
+            if (max == null || ps.getTotalQuantity() > max.getTotalQuantity()) {
+                max = ps;
+            }
+
+        }
+        if (max != null)
+            System.out.println("The most selling product today was: " + max.toString());
+    }
+
+    public void DailyProfitable() {
+        ProductSummary max = null;
+        LocalDate today = LocalDate.now();
+        ArrayList<ProductSummary>dailyTracker = MergeDuplicates(today);
+        for (ProductSummary ps : dailyTracker) {
+            if (max == null || ps.getTotalProfit() > max.getTotalProfit()) {
+                max = ps;
+            }
+
+        }
+        if (max != null)
+            System.out.println("The most selling product today was: " + max.toString());
     }
 
     public void changeAdminPassword() {
