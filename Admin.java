@@ -3,13 +3,18 @@ import java.time.LocalDate;
 import java.time.DateTimeException;
 
 public class Admin extends User {
-
+    private ArrayList<Salesman2> salesman = new ArrayList<>();
     // Stores all added products
     private ArrayList<Product> records = new ArrayList<>();
     // Stores all the orders by month(After each month data is transfered to the
     // database)
     private ArrayList<Order> orderRecord = new ArrayList<>();
     private ArrayList<ProductSummary> trackerList = new ArrayList<>();
+    private MaxHeapByProfit profitHeap;
+    private MaxHeapByQuantity quantityHeap;
+    private int totalOrders ;
+    double totalProfit , totalSales;
+    boolean heapify = true;
 
     Admin() {
         super();
@@ -31,7 +36,7 @@ public class Admin extends User {
         System.out.println("Enter address: ");
         String add = sc.nextLine();
 
-        // SalesMan object will be created later
+      salesman.add(new Salesman2(this, id, phoneNumber, name, add));
     }
 
     public void addProduct() {
@@ -62,17 +67,18 @@ public class Admin extends User {
         System.out.print("Enter quantity received: ");
         int quantity = sc.nextInt();
 
-        System.out.print("Enter price per item: ");
-        double price = sc.nextDouble();
+        System.out.print("Enter cost price per item: ");
+        double cp = sc.nextDouble();
         sc.nextLine();
-
-        records.add(new Product(id, quantity, price, productName, expiryDate));
+        System.out.print("Enter sale price per item: ");
+        double sp = sc.nextDouble();
+        records.add(new Product(id, quantity, sp, cp, productName, expiryDate));
 
         System.out.println("Product added successfully.");
     }
 
     public void addOrder() {
-
+        
         System.out.println("Enter Order ID: ");
         int id = sc.nextInt();
         sc.nextLine();
@@ -105,13 +111,58 @@ public class Admin extends User {
             System.out.println("Invalid date, order not executed");
             return;
         }
-        // We need to add sellingPrice and cost price in the place of m and y
-        Order o = new Order(id, pid, name, q, m, y, orderDate);
+
+        Product selected = null;
+        for (Product p : records) {
+
+            if (p.getId() == pid) {
+                selected = p;
+                break;
+            }
+        }
+        if(selected == null){
+            System.out.println("Product not found");
+            return;
+        }
+    
+        
+        if (!selected.soldFromStock(q)) {
+            System.out.println("Insufficient stock. Order not executed.");
+            return;
+        }
+        
+        Order o = new Order(id, pid, name, q, selected.getSalePrice(), selected.getCostPrice(), orderDate);
         orderRecord.add(o);
         updateQuantity(o);
 
-        System.out.println("The order was placed successfully.");
+        totalOrders++;
+        totalProfit += o.getProfit();
+        totalSales += o.getTotal();
 
+        System.out.println("The order was placed successfully.");
+        heapify = true;
+
+    }
+
+    
+    public void assignOrderToSalesman(Order o, int salesmanIndex) {
+        if (salesmanIndex < 0 || salesmanIndex >= salesman.size()) {
+            System.out.println("Invalid salesman selection.");
+            return;
+        }
+        salesman.get(salesmanIndex).assignOrder(o);
+    }
+
+    public int getTotalOrders(){
+        return this.totalOrders;
+    }
+
+    public double getTotalProfit(){
+        return this.totalProfit;
+    }
+
+    public double getTotalSales(){
+        return this.totalSales;
     }
 
     public void updateQuantity(Order o) {
@@ -145,29 +196,64 @@ public class Admin extends User {
         }
     }
 
-    
-    public ProductSummary mostSellingByMonth() {
-        MaxHeapByQuantity mostSelling;
+    private void buildHeaps() {
+        if (!heapify)
+            return;
 
-        mostSelling = new MaxHeapByQuantity();
+        quantityHeap = new MaxHeapByQuantity();
+        profitHeap = new MaxHeapByProfit();
+
         for (ProductSummary ps : trackerList) {
-            mostSelling.insert(ps);
+            quantityHeap.insert(ps);
+            profitHeap.insert(ps);
         }
-        return mostSelling.getMax();
+
+        heapify = false;
+    }
+
+    public ProductSummary mostSellingByMonth() {
+        buildHeaps();
+        return quantityHeap.getMax();
     }
 
     public ProductSummary mostProfitableByMonth() {
-        MaxHeapByProfit mosProfit;
-        mosProfit = new MaxHeapByProfit();
-        for (ProductSummary ps : trackerList) {
-            mosProfit.insert(ps);
-        }
-        return mosProfit.getMax();
+        buildHeaps();
+        return profitHeap.getMax();
     }
 
-    public ArrayList<ProductSummary> MergeDuplicates(LocalDate today){
-            ArrayList<ProductSummary> dailyTracker = new ArrayList<>();
-       
+    public ProductSummary leastSellingByMonth() {
+        if (trackerList.isEmpty())
+            return null;
+
+        ProductSummary min = trackerList.get(0);
+
+        for (ProductSummary ps : trackerList) {
+            if (ps.getTotalQuantity() < min.getTotalQuantity()) {
+                min = ps;
+            }
+        }
+
+        return min;
+    }
+
+    public ProductSummary leastProfitableByMonth() {
+        if (trackerList.isEmpty())
+            return null;
+
+        ProductSummary min = trackerList.get(0);
+
+        for (ProductSummary ps : trackerList) {
+            if (ps.getTotalProfit() < min.getTotalProfit()) {
+                min = ps;
+            }
+        }
+
+        return min;
+    }
+
+    public ArrayList<ProductSummary> MergeDuplicates(LocalDate today) {
+        ArrayList<ProductSummary> dailyTracker = new ArrayList<>();
+
         for (Order o : orderRecord) {
 
             if (o.getDate().equals(today)) {
@@ -197,8 +283,8 @@ public class Admin extends User {
     }
 
     public void DailymostSelling() {
-         LocalDate today = LocalDate.now();
-        ArrayList<ProductSummary>dailyTracker = MergeDuplicates(today);
+        LocalDate today = LocalDate.now();
+        ArrayList<ProductSummary> dailyTracker = MergeDuplicates(today);
         ProductSummary max = null;
         for (ProductSummary ps : dailyTracker) {
             if (max == null || ps.getTotalQuantity() > max.getTotalQuantity()) {
@@ -213,7 +299,7 @@ public class Admin extends User {
     public void DailyProfitable() {
         ProductSummary max = null;
         LocalDate today = LocalDate.now();
-        ArrayList<ProductSummary>dailyTracker = MergeDuplicates(today);
+        ArrayList<ProductSummary> dailyTracker = MergeDuplicates(today);
         for (ProductSummary ps : dailyTracker) {
             if (max == null || ps.getTotalProfit() > max.getTotalProfit()) {
                 max = ps;
@@ -221,7 +307,7 @@ public class Admin extends User {
 
         }
         if (max != null)
-            System.out.println("The most selling product today was: " + max.toString());
+            System.out.println("The most profitable product today was: " + max.toString());
     }
 
     public void changeAdminPassword() {

@@ -1,79 +1,81 @@
- public class Owner extends User{
+public class Owner extends User{
 
-    int tprofit=0,tsale=0;
+    Admin admin;
     
-    Owner(){
-     super();
-     
-    }
+    Owner(){}
 
-    Order2 o1= new Order2();
+    Owner(Admin admin){
+     super();
+     this.admin = admin;
+    }
     
      void dailySales(){
-        System.out.println("DAILY RECORD IS:");
-        System.out.println("Total number of orders are: "+o1.record.size());
-        for(int i =0;i<o1.record.size();i++){
-            tprofit+=o1.record.get(i).t_order_profit;
-            tsale+=o1.record.get(i).t_order_price;
+        admin.DailymostSelling();
+    }
+    
+    void dailyPopular(){
+        admin.DailyProfitable();
+    }
+    
+    void MonthlyPopular(){
+        ProductSummary ps = admin.mostProfitableByMonth();
+        if(ps != null){
+            System.out.println("Most profitable product was: "  + ps);
         }
-        System.out.println("Total profit is:"+tprofit);
-        System.out.println("Total sale is:"+tsale);
-    
-    
+        else{
+            System.out.println("No sales today");
+        }
     }
-    
-    
-    void weeklysales(){
-    
-    
+    void monthlymostsellig(){
+         ProductSummary ps = admin.mostSellingByMonth();
+         if(ps != null){
+            System.out.println("Most selling product was: " + ps);
+         }
+         else{
+            System.out.println("No sales today");
+         }
     }
-    
-    void monthlysales(){
-    
-    
-    
-    }
-    
-    
-    void totalprofit(){
-          System.out.println("Total profit is:"+tprofit);
-          System.out.println("Total sale is:"+tsale);
 
+     void leastsellingproduct(){
+        
+    ProductSummary ps = admin.leastSellingByMonth();
+        if (ps != null) {
+            System.out.println("Least selling product: " + ps);
+        }
     }
-    
-    
-    void totalorders(){
-         System.out.println("Total number of orders are: "+o1.record.size());
-    
+    void dailymostselling(){
+        admin.DailymostSelling(); 
     }
-    
-    
-    void bestSellingproduct(){
-    
-    
-    
-    }
-    
-    
-    void leastsellingproduct(){
-    
-    
-    
-    }
-    
-    
-    void checkStock(){
-    
-    
-    
-    }
+
+    public void viewTotals() {
+        System.out.println("Total orders: " + admin.getTotalOrders());
+        System.out.println("Total profit: " + admin.getTotalProfit());
+        System.out.println("Total sales: " + admin.getTotalSales());
+    }   
     
     void viewEmployeeSalaries(){
-    
-    
-    
     }
     
+     public void changeOwnerPassword() {
+        System.out.print("Enter old password: ");
+        String oldPass = sc.nextLine();
+
+        System.out.print("Enter new password: ");
+        String newPass = sc.nextLine();
+
+        changePassword(oldPass, newPass);
+    }
+
+    public void logout() {
+        super.logout();
+    }
+
+    public void login() {
+        System.out.println("=== login as an Owner ===");
+        System.out.println("Enter your password: ");
+        String pass = sc.nextLine();
+        super.login(pass);
+    }
     
     
 }
