@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.DateTimeException;
 
-public class Admin extends User {
+public class Admin_2 extends User {
     private ArrayList<Salesman2> salesman = new ArrayList<>();
     // Stores all added products
     private ArrayList<Product> records = new ArrayList<>();
@@ -16,7 +16,7 @@ public class Admin extends User {
     double totalProfit , totalSales;
     boolean heapify = true;
 
-    Admin() {
+    Admin_2() {
         super();
 
     }
@@ -36,7 +36,7 @@ public class Admin extends User {
         System.out.println("Enter address: ");
         String add = sc.nextLine();
 
-      salesman.add(new Salesman2(this, id, phoneNumber, name, add));
+      //salesman.add(new Salesman2(this, id, phoneNumber, name, add));
     }
 
     public void addProduct() {

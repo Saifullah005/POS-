@@ -20,7 +20,7 @@ public class Main {
                     choice2=sc.nextInt();
                      
                     if(choice2==1)
-                        adminUser=new Admin();
+                        adminUser=new Admin_2();
                     else if(choice2==2)
                         ownUser= new Owner();
                     else

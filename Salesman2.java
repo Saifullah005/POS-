@@ -4,7 +4,7 @@ public class Salesman2 extends User {
 
     private static final int commission = 5;
 
-    private Admin admin;
+    private Admin_2 admin;
 
 
     private ArrayList<Order> assignedOrders;
@@ -17,7 +17,7 @@ public class Salesman2 extends User {
     private int deliveredQuantity;
 
     
-    public Salesman2(Admin admin, int id , int phoneNumber, String name , String address) {
+    public Salesman2(Admin_2 admin, int id , int phoneNumber, String name , String address) {
         super();
         this.name = name;
         this.address = address;

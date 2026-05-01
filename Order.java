@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.util.*;
 
 public class Order {
 
@@ -9,7 +10,16 @@ public class Order {
     private double sellingPrice;
     private double costPrice;
     private LocalDate date;
+    double t_order_profit=0;
+    double t_order_price=0;
 
+    Order next,previous,first; 
+    ArrayList <Order> record = new ArrayList<>();
+    Scanner sc = new Scanner (System.in);
+
+    public Order(){
+
+    }
     public Order(int purchaseId, int productId, String productName, int quantity, double sellingPrice, double costPrice, LocalDate date) {
 
         this.purchaseId = purchaseId;
@@ -20,6 +30,46 @@ public class Order {
         this.costPrice = costPrice;
         this.date = date;
     }
+
+     public void addproduct(){
+        char ch ='y';
+        first=null;
+        while (ch=='y'){
+               
+               Order current = new Order();
+               System.out.println("Enetr the purchase id: ");
+               current.productId=sc.nextInt();
+               System.out.println("Enter the product id: ");
+               current.productId=sc.nextInt();
+               System.out.println("Enter the product name:");
+               current.productName=sc.nextLine();
+               sc.nextLine();
+               System.out.println("Enter the quantity: ");
+               current.quantity=sc.nextInt();
+               System.out.println("Enter the selling price:");
+               current.sellingPrice=sc.nextDouble();
+               System.out.println("Enter the Cost Price: ");
+               current.costPrice=sc.nextDouble();
+               
+
+               if(first==null){
+                    first=previous=current;
+
+               }
+               else{
+                     previous.next=current;
+                     previous=previous.next;
+               }
+        }
+           
+             System.out.println("Want to buy more products[y/n]:");
+             ch=sc.next().charAt(0);
+         
+             if(ch!='y'){
+                record.add(first);
+             }
+
+     }
 
     public int getPurchaseId() {
         return purchaseId;
@@ -48,4 +98,27 @@ public class Order {
     public double getProfit() {
         return (sellingPrice - costPrice) * quantity;
     }
+   
+    public void t_order_price(){
+       
+        Order temp=first;
+        while(temp!=null){
+            t_order_price+=temp.getTotal();
+            temp=temp.next;
+        }
+        System.out.println("Total Price:"+t_order_price);
+
+    }
+
+    public void t_order_profit(){
+         
+        Order temp=first;
+        while(temp!=null){
+            t_order_profit+=temp.getProfit();
+            temp=temp.next;
+        }
+        System.out.println("Total Profit:"+t_order_profit);
+
+    }
+  
 }

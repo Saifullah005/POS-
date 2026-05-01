@@ -1,10 +1,10 @@
 public class Owner extends User{
 
-    Admin admin;
+    Admin_2 admin;
     
     Owner(){}
 
-    Owner(Admin admin){
+    Owner(Admin_2 admin){
      super();
      this.admin = admin;
     }

@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Salesman extends User {
 
     public static final int commission = 5;
-    Order2 o1 = new Order2();
+    Order o1 = new Order();
     public int tOrder=o1.record.size();
     public int orderDeliver;
 
@@ -19,7 +19,7 @@ public class Salesman extends User {
       int  quantity = 0;
       int salary = 0;
       for(int i=0;i<o1.record.size();i++){
-          Order2 temp=o1.record.get(i).first;
+          Order temp=o1.record.get(i).first;
           while(temp!=null){
              quantity+=temp.getQuantity();
              temp=temp.next;
