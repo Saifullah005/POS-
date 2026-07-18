@@ -1,5 +1,6 @@
+package src;
 import java.util.ArrayList;
-public class MaxHeapByProfit {
+public class MaxHeapByQuantity {
 
     private ArrayList<ProductSummary> heap = new ArrayList<>();
 
@@ -12,8 +13,8 @@ public class MaxHeapByProfit {
         while (index > 0) {
             int parent = (index - 1) / 2;
 
-            if (heap.get(index).getTotalProfit() >
-                heap.get(parent).getTotalProfit()) {
+            if (heap.get(index).getTotalQuantity() >
+                heap.get(parent).getTotalQuantity()) {
 
                 swap(index, parent);
                 index = parent;
@@ -33,4 +34,4 @@ public class MaxHeapByProfit {
         heap.set(i, heap.get(j));
         heap.set(j, temp);
     }
-}
+}   

@@ -1,14 +1,16 @@
+package src;
+
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.DateTimeException;
 
-public class Admin_2 extends User {
-    private ArrayList<Salesman2> salesman = new ArrayList<>();
+public class Admin extends User {
+    private ArrayList<Salesman> salesman = new ArrayList<>();
     // Stores all added products
     private ArrayList<Product> records = new ArrayList<>();
+    private ArrayList<Order> allOrders = new ArrayList<>();
     // Stores all the orders by month(After each month data is transfered to the
-    // database)
-    private ArrayList<Order> orderRecord = new ArrayList<>();
+    // database
     private ArrayList<ProductSummary> trackerList = new ArrayList<>();
     private MaxHeapByProfit profitHeap;
     private MaxHeapByQuantity quantityHeap;
@@ -16,27 +18,30 @@ public class Admin_2 extends User {
     double totalProfit , totalSales;
     boolean heapify = true;
 
-    Admin_2() {
+    Admin() {
         super();
-
+    }
+    
+    Admin(int id , String name , String pass){
+        super(id , name , pass , "Admin");
     }
 
     public void addSalesMan() {
 
         System.out.println("Enter the id: ");
         int id = sc.nextInt();
-
-        System.out.println("Enter phone number: ");
-        int phoneNumber = sc.nextInt();
         sc.nextLine();
 
         System.out.println("Enter name: ");
         String name = sc.nextLine();
 
-        System.out.println("Enter address: ");
-        String add = sc.nextLine();
+        System.out.println("Enter your password");
+        String pass = sc.nextLine();
 
-      //salesman.add(new Salesman2(this, id, phoneNumber, name, add));
+        System.out.println("Enter your role: ");
+        String role = sc.nextLine();
+
+      salesman.add(new Salesman(id, name, pass , role));
     }
 
     public void addProduct() {
@@ -78,20 +83,9 @@ public class Admin_2 extends User {
     }
 
     public void addOrder() {
-        
-        System.out.println("Enter Order ID: ");
-        int id = sc.nextInt();
-        sc.nextLine();
+        Order newOrder = new Order();
 
-        System.out.println("Enter customer name: ");
-        String name = sc.nextLine();
-
-        System.out.println("Enter product ID: ");
-        int pid = sc.nextInt();
-
-        System.out.println("Enter quantity of product: ");
-        int q = sc.nextInt();
-        sc.nextLine();
+        newOrder.addproduct();
 
         System.out.println("Enter order date");
 
@@ -112,45 +106,68 @@ public class Admin_2 extends User {
             return;
         }
 
-        Product selected = null;
-        for (Product p : records) {
+        Order temp = newOrder.first;
 
-            if (p.getId() == pid) {
-                selected = p;
-                break;
+        while (temp != null) {
+
+            Product selected = null;
+
+            // find product in inventory
+            for (Product p : records) {
+                if (p.getId() == temp.getProductId()) {
+                    selected = p;
+                    break;
+                }
             }
-        }
-        if(selected == null){
-            System.out.println("Product not found");
-            return;
-        }
-    
-        
-        if (!selected.soldFromStock(q)) {
-            System.out.println("Insufficient stock. Order not executed.");
-            return;
-        }
-        
-        Order o = new Order(id, pid, name, q, selected.getSalePrice(), selected.getCostPrice(), orderDate);
-        orderRecord.add(o);
-        updateQuantity(o);
 
+            // product not found
+            if (selected == null) {
+                System.out.println("Product not found: " + temp.getProductId());
+                temp = temp.next;
+                continue;
+            }
+
+            // insufficient stock
+            if (!selected.soldFromStock(temp.getQuantity())) {
+                System.out.println("Insufficient stock for product: " + temp.getProductId());
+                temp = temp.next;
+                continue;
+            }
+
+            // valid product → process order
+            temp.setDate(orderDate);
+            totalProfit += temp.getProfit();
+            totalSales += temp.getTotal();
+            updateQuantity(temp);
+
+            temp = temp.next;
+        }
+
+        allOrders.add(newOrder);
         totalOrders++;
-        totalProfit += o.getProfit();
-        totalSales += o.getTotal();
 
         System.out.println("The order was placed successfully.");
         heapify = true;
-
     }
+ 
+    public void assignOrderToSalesman(int salesmanIndex, int orderIndex) {
 
-    
-    public void assignOrderToSalesman(Order o, int salesmanIndex) {
         if (salesmanIndex < 0 || salesmanIndex >= salesman.size()) {
-            System.out.println("Invalid salesman selection.");
+            System.out.println("Invalid salesman.");
             return;
         }
-        salesman.get(salesmanIndex).assignOrder(o);
+
+        if (orderIndex < 0 || orderIndex >= allOrders.size()) {
+            System.out.println("Invalid order.");
+            return;
+        }
+
+        Order selectedOrder = allOrders.get(orderIndex);
+
+        // Send FULL linked list
+        salesman.get(salesmanIndex).assignOrder(selectedOrder);
+
+        System.out.println("Order assigned successfully.");
     }
 
     public int getTotalOrders(){
@@ -252,33 +269,41 @@ public class Admin_2 extends User {
     }
 
     public ArrayList<ProductSummary> MergeDuplicates(LocalDate today) {
+
         ArrayList<ProductSummary> dailyTracker = new ArrayList<>();
 
-        for (Order o : orderRecord) {
+        for (Order ord : allOrders) {
 
-            if (o.getDate().equals(today)) {
+            Order temp = ord.first;
 
-                boolean found = false;
+            while (temp != null) {
 
-                for (ProductSummary ps : dailyTracker) {
-                    if (ps.getProductId() == o.getProductId()) {
-                        ps.addQuantity(o.getQuantity());
-                        ps.addProfit(o.getProfit());
-                        found = true;
-                        break;
+                if (temp.getDate() != null && temp.getDate().equals(today)) {
+
+                    boolean found = false;
+
+                    for (ProductSummary ps : dailyTracker) {
+                        if (ps.getProductId() == temp.getProductId()) {
+                            ps.addQuantity(temp.getQuantity());
+                            ps.addProfit(temp.getProfit());
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        dailyTracker.add(
+                                new ProductSummary(
+                                        temp.getProductId(),
+                                        temp.getQuantity(),
+                                        temp.getProfit()));
                     }
                 }
 
-                if (!found) {
-                    dailyTracker.add(
-                            new ProductSummary(
-                                    o.getProductId(),
-                                    o.getQuantity(),
-                                    o.getProfit()));
-                }
-
+                temp = temp.next;
             }
         }
+
         return dailyTracker;
     }
 

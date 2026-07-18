@@ -1,3 +1,4 @@
+package src;
 public class ProductSummary {
     private int productId;
     private int totalQuantity;

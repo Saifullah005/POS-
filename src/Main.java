@@ -1,3 +1,4 @@
+package src;
 import java.util.Scanner;
 public class Main {
     public static void main (String [] args){
@@ -20,7 +21,7 @@ public class Main {
                     choice2=sc.nextInt();
                      
                     if(choice2==1)
-                        adminUser=new Admin_2();
+                        adminUser=new Admin();
                     else if(choice2==2)
                         ownUser= new Owner();
                     else
