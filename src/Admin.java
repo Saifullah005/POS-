@@ -1,359 +1,383 @@
 package src;
 
-import java.util.ArrayList;
-import java.time.LocalDate;
 import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+
+import DB.OrderDAO;
+import DB.ProductDAO;
+import DB.ReportDAO;
+import DB.UserDAO;
 
 public class Admin extends User {
-    private ArrayList<Salesman> salesman = new ArrayList<>();
-    // Stores all added products
-    private ArrayList<Product> records = new ArrayList<>();
-    private ArrayList<Order> allOrders = new ArrayList<>();
-    // Stores all the orders by month(After each month data is transfered to the
-    // database
-    private ArrayList<ProductSummary> trackerList = new ArrayList<>();
-    private MaxHeapByProfit profitHeap;
-    private MaxHeapByQuantity quantityHeap;
-    private int totalOrders ;
-    double totalProfit , totalSales;
-    boolean heapify = true;
 
-    Admin() {
+    private UserDAO userDAO;
+    private ProductDAO productDAO;
+    private OrderDAO orderDAO;
+    private ReportDAO reportDAO;
+
+    public Admin() {
+
         super();
-    }
-    
-    Admin(int id , String name , String pass){
-        super(id , name , pass , "Admin");
+
+        userDAO = new UserDAO();
+        productDAO = new ProductDAO();
+        orderDAO = new OrderDAO();
+        reportDAO = new ReportDAO();
     }
 
+    public Admin(
+            int id,
+            String name,
+            String password) {
+
+        super(
+                id,
+                name,
+                password,
+                "ADMIN");
+
+        userDAO = new UserDAO();
+        productDAO = new ProductDAO();
+        orderDAO = new OrderDAO();
+        reportDAO = new ReportDAO();
+    }
     public void addSalesMan() {
 
-        System.out.println("Enter the id: ");
-        int id = sc.nextInt();
-        sc.nextLine();
-
-        System.out.println("Enter name: ");
+        System.out.print("Enter name: ");
         String name = sc.nextLine();
 
-        System.out.println("Enter your password");
+        System.out.print("Enter password: ");
         String pass = sc.nextLine();
 
-        System.out.println("Enter your role: ");
-        String role = sc.nextLine();
+        boolean success =
+                userDAO.addUser(
+                        name,
+                        pass,
+                        "SALESMAN");
 
-      salesman.add(new Salesman(id, name, pass , role));
+        if (success) {
+
+            System.out.println(
+                    "Salesman added successfully.");
+        }
+        else {
+
+            System.out.println(
+                    "Failed to add salesman.");
+        }
     }
 
+    
     public void addProduct() {
 
-        System.out.print("Enter product name: ");
-        String productName = sc.nextLine();
+        System.out.print(
+                "Enter product name: ");
 
-        System.out.print("Enter product ID: ");
-        int id = sc.nextInt();
+        String productName =
+                sc.nextLine();
 
-        System.out.print("Enter expiry year (e.g. 2026): ");
-        int year = sc.nextInt();
+        System.out.print(
+                "Enter expiry year: ");
 
-        System.out.print("Enter expiry month (1-12): ");
-        int month = sc.nextInt();
+        int year =
+                sc.nextInt();
 
-        System.out.print("Enter expiry day (1-31): ");
-        int day = sc.nextInt();
+        System.out.print(
+                "Enter expiry month: ");
+
+        int month =
+                sc.nextInt();
+
+        System.out.print(
+                "Enter expiry day: ");
+
+        int day =
+                sc.nextInt();
 
         LocalDate expiryDate;
+
         try {
-            expiryDate = LocalDate.of(year, month, day);
+
+            expiryDate =
+                    LocalDate.of(
+                            year,
+                            month,
+                            day);
+
         } catch (DateTimeException e) {
-            System.out.println("Invalid date. Product not added.");
+
+            System.out.println(
+                    "Invalid date.");
+
             return;
         }
 
-        System.out.print("Enter quantity received: ");
-        int quantity = sc.nextInt();
+        System.out.print(
+                "Enter quantity: ");
 
-        System.out.print("Enter cost price per item: ");
-        double cp = sc.nextDouble();
+        int quantity =
+                sc.nextInt();
+
+        System.out.print(
+                "Enter cost price: ");
+
+        double costPrice =
+                sc.nextDouble();
+
+        System.out.print(
+                "Enter sale price: ");
+
+        double salePrice =
+                sc.nextDouble();
+
         sc.nextLine();
-        System.out.print("Enter sale price per item: ");
-        double sp = sc.nextDouble();
-        records.add(new Product(id, quantity, sp, cp, productName, expiryDate));
 
-        System.out.println("Product added successfully.");
+        Product product =
+                new Product(
+                        0,
+                        quantity,
+                        salePrice,
+                        costPrice,
+                        productName,
+                        expiryDate);
+
+        boolean success =
+                productDAO.addProduct(
+                        product);
+
+        if (success) {
+
+            System.out.println(
+                    "Product added successfully.");
+        }
+        else {
+
+            System.out.println(
+                    "Failed to add product.");
+        }
     }
 
     public void addOrder() {
-        Order newOrder = new Order();
 
-        newOrder.addproduct();
+        System.out.println(
+                "\n===== ADD PRODUCTS TO CART =====");
 
-        System.out.println("Enter order date");
+        Order cart =
+                new Order();
 
-        System.out.print("Day: ");
-        int d = sc.nextInt();
+        cart.addProduct();
 
-        System.out.print("Month: ");
-        int m = sc.nextInt();
+        System.out.println(
+                "\n===== CART DETAILS =====");
 
-        System.out.print("Year: ");
-        int y = sc.nextInt();
+        System.out.println(
+                cart.displayCart());
 
-        LocalDate orderDate;
-        try {
-            orderDate = LocalDate.of(y, m, d);
-        } catch (DateTimeException e) {
-            System.out.println("Invalid date, order not executed");
+        double totalPrice =
+                cart.getTotalOrderPrice();
+
+        double totalProfit =
+                cart.getTotalOrderProfit();
+
+        int orderId =
+                orderDAO.createOrder(
+                        LocalDate.now(),
+                        getId(),
+                        totalPrice,
+                        totalProfit);
+
+        if (orderId == -1) {
+
+            System.out.println(
+                    "Failed to create order.");
+
             return;
         }
 
-        Order temp = newOrder.first;
+        boolean success =
+                orderDAO.saveCart(
+                        orderId,
+                        cart);
 
-        while (temp != null) {
+        if (success) {
 
-            Product selected = null;
+            System.out.println(
+                    "Order saved successfully.");
+        }
+        else {
 
-            // find product in inventory
-            for (Product p : records) {
-                if (p.getId() == temp.getProductId()) {
-                    selected = p;
-                    break;
-                }
-            }
-
-            // product not found
-            if (selected == null) {
-                System.out.println("Product not found: " + temp.getProductId());
-                temp = temp.next;
-                continue;
-            }
-
-            // insufficient stock
-            if (!selected.soldFromStock(temp.getQuantity())) {
-                System.out.println("Insufficient stock for product: " + temp.getProductId());
-                temp = temp.next;
-                continue;
-            }
-
-            // valid product → process order
-            temp.setDate(orderDate);
-            totalProfit += temp.getProfit();
-            totalSales += temp.getTotal();
-            updateQuantity(temp);
-
-            temp = temp.next;
+            System.out.println(
+                    "Failed to save order items.");
         }
 
-        allOrders.add(newOrder);
-        totalOrders++;
-
-        System.out.println("The order was placed successfully.");
-        heapify = true;
+        cart.clearCart();
     }
- 
-    public void assignOrderToSalesman(int salesmanIndex, int orderIndex) {
 
-        if (salesmanIndex < 0 || salesmanIndex >= salesman.size()) {
-            System.out.println("Invalid salesman.");
-            return;
+    public void assignOrderToSalesman(
+            int orderId,
+            int salesmanId) {
+
+        boolean success =
+                orderDAO.assignSalesman(
+                        orderId,
+                        salesmanId);
+
+        if (success) {
+
+            System.out.println(
+                    "Order assigned successfully.");
         }
+        else {
 
-        if (orderIndex < 0 || orderIndex >= allOrders.size()) {
-            System.out.println("Invalid order.");
-            return;
-        }
-
-        Order selectedOrder = allOrders.get(orderIndex);
-
-        // Send FULL linked list
-        salesman.get(salesmanIndex).assignOrder(selectedOrder);
-
-        System.out.println("Order assigned successfully.");
-    }
-
-    public int getTotalOrders(){
-        return this.totalOrders;
-    }
-
-    public double getTotalProfit(){
-        return this.totalProfit;
-    }
-
-    public double getTotalSales(){
-        return this.totalSales;
-    }
-
-    public void updateQuantity(Order o) {
-        for (int i = 0; i < trackerList.size(); i++) {
-            ProductSummary ps = trackerList.get(i);
-
-            if (ps.getProductId() == o.getProductId()) {
-                ps.addQuantity(o.getQuantity());
-                ps.addProfit(o.getProfit());
-                return;
-            }
-        }
-
-        trackerList.add(
-                new ProductSummary(
-                        o.getProductId(),
-                        o.getQuantity(),
-                        o.getProfit()));
-    }
-
-    public void checkInventory() {
-        if (records.isEmpty()) {
-            System.out.println("Inventory is empty.");
-            return;
-        }
-
-        System.out.println("The current Inventory is: ");
-        for (Product p : records) {
-            System.out.println(p);
-            System.out.println("-------------------------");
+            System.out.println(
+                    "Failed to assign order.");
         }
     }
 
-    private void buildHeaps() {
-        if (!heapify)
-            return;
+    public ArrayList<Product> checkInventory() {
+        return productDAO.getAllProducts();
+    }
+    public String totalOrders() {
 
-        quantityHeap = new MaxHeapByQuantity();
-        profitHeap = new MaxHeapByProfit();
+        return reportDAO.totalOrders();
+    }
 
-        for (ProductSummary ps : trackerList) {
-            quantityHeap.insert(ps);
-            profitHeap.insert(ps);
+    public String totalProfit() {
+
+        return reportDAO.totalProfit();
+    }
+
+    public String totalSales() {
+
+        return reportDAO.totalSales();
+    }
+
+    public String todaySales() {
+
+        return reportDAO.todaySales();
+    }
+
+    public String todayProfit() {
+
+        return reportDAO.todayProfit();
+    }
+
+    public String mostSellingProduct() {
+
+        return reportDAO.mostSellingProduct();
+    }
+
+    public String leastSellingProduct() {
+
+        return reportDAO.leastSellingProduct();
+    }
+
+    public String mostProfitableProduct() {
+
+        return reportDAO.mostProfitableProduct();
+    }
+
+    public String leastProfitableProduct() {
+
+        return reportDAO.leastProfitableProduct();
+    }
+
+    public void deleteProduct(
+            int productId) {
+
+        boolean success =
+                productDAO.removeProduct(
+                        productId);
+
+        if (success) {
+
+            System.out.println(
+                    "Product deleted.");
         }
+        else {
 
-        heapify = false;
-    }
-
-    public ProductSummary mostSellingByMonth() {
-        buildHeaps();
-        return quantityHeap.getMax();
-    }
-
-    public ProductSummary mostProfitableByMonth() {
-        buildHeaps();
-        return profitHeap.getMax();
-    }
-
-    public ProductSummary leastSellingByMonth() {
-        if (trackerList.isEmpty())
-            return null;
-
-        ProductSummary min = trackerList.get(0);
-
-        for (ProductSummary ps : trackerList) {
-            if (ps.getTotalQuantity() < min.getTotalQuantity()) {
-                min = ps;
-            }
+            System.out.println(
+                    "Failed to delete product.");
         }
-
-        return min;
     }
 
-    public ProductSummary leastProfitableByMonth() {
-        if (trackerList.isEmpty())
-            return null;
+    public void deleteOrder(
+            int orderId) {
 
-        ProductSummary min = trackerList.get(0);
+        boolean success =
+                orderDAO.deleteOrder(
+                        orderId);
 
-        for (ProductSummary ps : trackerList) {
-            if (ps.getTotalProfit() < min.getTotalProfit()) {
-                min = ps;
-            }
+        if (success) {
+
+            System.out.println(
+                    "Order deleted.");
         }
+        else {
 
-        return min;
-    }
-
-    public ArrayList<ProductSummary> MergeDuplicates(LocalDate today) {
-
-        ArrayList<ProductSummary> dailyTracker = new ArrayList<>();
-
-        for (Order ord : allOrders) {
-
-            Order temp = ord.first;
-
-            while (temp != null) {
-
-                if (temp.getDate() != null && temp.getDate().equals(today)) {
-
-                    boolean found = false;
-
-                    for (ProductSummary ps : dailyTracker) {
-                        if (ps.getProductId() == temp.getProductId()) {
-                            ps.addQuantity(temp.getQuantity());
-                            ps.addProfit(temp.getProfit());
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        dailyTracker.add(
-                                new ProductSummary(
-                                        temp.getProductId(),
-                                        temp.getQuantity(),
-                                        temp.getProfit()));
-                    }
-                }
-
-                temp = temp.next;
-            }
+            System.out.println(
+                    "Failed to delete order.");
         }
-
-        return dailyTracker;
     }
 
-    public void DailymostSelling() {
-        LocalDate today = LocalDate.now();
-        ArrayList<ProductSummary> dailyTracker = MergeDuplicates(today);
-        ProductSummary max = null;
-        for (ProductSummary ps : dailyTracker) {
-            if (max == null || ps.getTotalQuantity() > max.getTotalQuantity()) {
-                max = ps;
-            }
+    public void deleteUser(
+            int userId) {
 
+        boolean success =
+                userDAO.deleteUser(
+                        userId);
+
+        if (success) {
+
+            System.out.println(
+                    "User deleted.");
         }
-        if (max != null)
-            System.out.println("The most selling product today was: " + max.toString());
-    }
+        else {
 
-    public void DailyProfitable() {
-        ProductSummary max = null;
-        LocalDate today = LocalDate.now();
-        ArrayList<ProductSummary> dailyTracker = MergeDuplicates(today);
-        for (ProductSummary ps : dailyTracker) {
-            if (max == null || ps.getTotalProfit() > max.getTotalProfit()) {
-                max = ps;
-            }
-
+            System.out.println(
+                    "Failed to delete user.");
         }
-        if (max != null)
-            System.out.println("The most profitable product today was: " + max.toString());
     }
+
 
     public void changeAdminPassword() {
-        System.out.print("Enter old password: ");
-        String oldPass = sc.nextLine();
 
-        System.out.print("Enter new password: ");
-        String newPass = sc.nextLine();
+        System.out.print(
+                "Enter old password: ");
 
-        changePassword(oldPass, newPass);
+        String oldPass =
+                sc.nextLine();
+
+        System.out.print(
+                "Enter new password: ");
+
+        String newPass =
+                sc.nextLine();
+
+        changePassword(
+                oldPass,
+                newPass);
     }
 
+    
+    @Override
     public void logout() {
+
         super.logout();
     }
 
     public void login() {
-        System.out.println("=== login as an admin ===");
-        System.out.println("Enter your password: ");
-        String pass = sc.nextLine();
+
+        System.out.println(
+                "=== login as admin ===");
+
+        System.out.print(
+                "Enter password: ");
+
+        String pass =
+                sc.nextLine();
+
         super.login(pass);
     }
-
 }

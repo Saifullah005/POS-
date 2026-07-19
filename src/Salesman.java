@@ -1,84 +1,91 @@
 package src;
+
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
-class Salesman extends User {
+import DB.OrderDAO;
 
-    public static int commission = 5;
+public class Salesman extends User {
 
-    // orrect storage for assigned orders
-    private ArrayList<Order> assignedOrders = new ArrayList<>();
+    public static final int COMMISSION = 5;
 
-    private int order_delivered = 0;
+    private OrderDAO orderDAO;
+    private Queue<Integer> assignedOrders;
 
     public Salesman() {
         super();
+        orderDAO = new OrderDAO();
+        assignedOrders = new LinkedList<>();
     }
 
     public Salesman(int userid, String name, String password, String role) {
         super(userid, name, password, role);
+        orderDAO = new OrderDAO();
+        assignedOrders = new LinkedList<>();
     }
 
-    //Assign FULL linked list
-    public void assignOrder(Order o) {
-        assignedOrders.add(o);
-        System.out.println("Order assigned to salesman.");
-    }
+    public void loadAssignedOrders() {
 
-    //Calculate salary based on all assigned orders
-    public void calculate_salary() {
-        int totalQuantity = 0;
+        assignedOrders.clear();
 
-        for (Order order : assignedOrders) {
+        ArrayList<Integer> orders = orderDAO.getPendingOrderIds(getId());
 
-            Order temp = order.first;
-
-            while (temp != null) {
-                totalQuantity += temp.getQuantity();
-                temp = temp.next;
-            }
+        for (Integer orderId : orders) {
+            assignedOrders.offer(orderId);
         }
-
-        int salary = totalQuantity * commission;
-
-        System.out.println("Total salary is: " + salary);
     }
 
-    // Total orders assigned
-    public void total_orders() {
-        System.out.println("Total orders to deliver: " + assignedOrders.size());
+    public Integer viewNextOrder() {
+        return assignedOrders.peek();
     }
 
-    // Orders delivered
-    public void check_deliver() {
-        System.out.println("Total orders delivered: " + order_delivered);
-    }
+    public boolean deliverNextOrder() {
 
-    // Update delivered orders
-    public void updateorder() {
         if (assignedOrders.isEmpty()) {
-            System.out.println("No orders to deliver.");
-            return;
+            return false;
         }
 
-        System.out.println("Enter number of orders delivered:");
-        int delivered = sc.nextInt();
+        int orderId = assignedOrders.peek();
 
-        if (delivered > assignedOrders.size()) {
-            System.out.println("Invalid number.");
-            return;
+        if (orderDAO.markDelivered(orderId)) {
+            assignedOrders.poll();
+            return true;
         }
 
-        // remove delivered orders
-        for (int i = 0; i < delivered; i++) {
-            assignedOrders.remove(0);
-        }
+        return false;
+    }
 
-        order_delivered += delivered;
+    public boolean hasPendingOrders() {
+        return !assignedOrders.isEmpty();
+    }
 
-        System.out.println("Orders updated successfully.");
+    public ArrayList<Integer> viewAssignedOrders() {
+        return new ArrayList<>(assignedOrders);
+    }
+
+    public ArrayList<Integer> viewDeliveredOrders() {
+        return orderDAO.getDeliveredOrderIds(getId());
+    }
+
+    public int pendingOrdersCount() {
+        return assignedOrders.size();
+    }
+
+    public String totalOrders() {
+        return "Pending Orders: " + assignedOrders.size();
+    }
+
+    public boolean markOrderDelivered(int orderId) {
+        return orderDAO.markDelivered(orderId);
+    }
+
+    public String calculateSalary() {
+        return "Salary calculation pending implementation";
     }
 
     public void changeSalesmanPassword() {
+
         System.out.print("Enter old password: ");
         String oldPass = sc.nextLine();
 
@@ -88,14 +95,20 @@ class Salesman extends User {
         changePassword(oldPass, newPass);
     }
 
+    @Override
     public void logout() {
         super.logout();
     }
 
     public void login() {
-        System.out.println("=== login as a Salesman ===");
-        System.out.println("Enter your password: ");
+
+        System.out.println("=== Login As Salesman ===");
+        System.out.print("Enter Password: ");
+
         String pass = sc.nextLine();
-        super.login(pass);
+
+        if (super.login(pass)) {
+            loadAssignedOrders();
+        }
     }
 }

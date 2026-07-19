@@ -21,7 +21,7 @@ public class Product {
         this.expiryDate = expDate;
     }
 
-    public int getId() {
+    public int geProducttId() {
         return id;
     }
 

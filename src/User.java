@@ -1,5 +1,8 @@
 package src;
+
+import DB.UserDAO;
 import java.util.Scanner;
+
 public class User {
 
     protected int userid;
@@ -8,7 +11,7 @@ public class User {
     protected String role;
     protected int salary;
     protected boolean loggedIn = false;
-    // Console input scanner 
+    // Console input scanner
     protected static Scanner sc = new Scanner(System.in);
 
     public User() {
@@ -26,9 +29,8 @@ public class User {
         System.out.print("Enter Role [admin/owner/salesman]: ");
         this.role = sc.nextLine();
 
-
     }
-//Later for GUI
+
     public User(int userid, String name, String password, String role) {
         this.userid = userid;
         this.name = name;
@@ -37,15 +39,35 @@ public class User {
     }
 
     public boolean changePassword(String oldPass, String newPass) {
+
         if (!password.equals(oldPass)) {
             System.out.println("Incorrect old password.");
             return false;
         }
+
+        if (newPass == null || newPass.isBlank()) {
+            System.out.println("Invalid password.");
+            return false;
+        }
+
+        UserDAO userDAO = new UserDAO();
+
+        boolean success = userDAO.changePassword(userid, newPass);
+
+        if (!success) {
+            System.out.println("Failed to update database.");
+            return false;
+        }
+
         password = newPass;
+
         System.out.println("Password changed successfully.");
         return true;
     }
-    
+
+    public int getId() {
+        return this.userid;
+    }
 
     public void logout() {
         loggedIn = false;
@@ -61,5 +83,21 @@ public class User {
             System.out.println("Invalid password.");
             return false;
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public boolean isLoggedIn() {
+        return loggedIn;
     }
 }

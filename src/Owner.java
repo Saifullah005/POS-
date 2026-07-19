@@ -1,97 +1,65 @@
 package src;
-import java.util.Scanner;
 
-public class Owner extends User{
-    Scanner sc = new Scanner(System.in);
-    int tprofit=0,tsale=0;
-    Owner(){
+import java.util.ArrayList;
+
+import DB.ReportDAO;
+
+public class Owner extends User {
+
+    private ReportDAO reportDAO;
+
+    private Admin admin;
+
+    public Owner() {
         super();
-    }
-    Owner(int id , String name ,String pass){
-     super(id, name , pass , "Owner");
-     
+        reportDAO = new ReportDAO();
+        admin = new Admin();
     }
 
-    Order o1= new Order();
-    Admin a1= new Admin();
-    
-    String dailySales(){
-        System.out.println("DAILY RECORD IS:");
-        System.out.println();
-        for(int i =0;i<o1.record.size();i++){
-            tprofit+=o1.record.get(i).t_order_profit;
-            tsale+=o1.record.get(i).t_order_price;
-        }
-        System.out.println();
-        System.out.println();
-    
-        return "Total number of orders are: "+o1.record.size() + 
-                "\nTotal profit is:"+tprofit + 
-                "\nTotal sale is:"+tsale;
-    }
-    
-    
-    void MonthlyPopular(){
-        a1.mostProfitableByMonth();
-
-    }
-    void monthlymostsellig(){
-         a1.mostSellingByMonth();
-
-    }
-     void dailyPopular(){
-         a1.DailyProfitable();
-    
-    }
-    void dailymostselling(){
-        a1.DailymostSelling(); 
+    public Owner(int id, String name, String password) {
+        super(id, name, password, "OWNER");
+        reportDAO = new ReportDAO();
+        admin = new Admin();
     }
 
-   void inventory(){
-       a1.checkInventory();
-   }
-    
-    
-    void totalprofit(){
-          System.out.println("Total profit is:"+tprofit);
-          System.out.println("Total sale is:"+tsale);
+    public String dailySales() {
+        return reportDAO.todaySales() + "\n" + reportDAO.todayProfit();
+    }
 
+    public String totalOrders() {
+        return reportDAO.totalOrders();
     }
-    
-    
-    void totalorders(){
-         System.out.println("Total number of orders are: "+o1.record.size());
-    
-    }
-    
-    
-   
-    
-    
-    void monthlymostselling(){
-        
-      a1.mostSellingByMonth(); 
 
+    public String totalProfit() {
+        return reportDAO.totalProfit();
     }
-    void dailylymostselling(){
-        
-      a1.DailymostSelling(); 
 
+    public String totalSales() {
+        return reportDAO.totalSales();
     }
-    
-    void dailymostprofitable(){
-    
-    a1.DailyProfitable();
-    
+
+    public String mostSellingProduct() {
+        return reportDAO.mostSellingProduct();
     }
-    
-    void monthlymostprofitable(){
-    
-       a1.mostProfitableByMonth();
-    
+
+    public String leastSellingProduct() {
+        return reportDAO.leastSellingProduct();
     }
-    
-     public void changeOwnerPassword() {
+
+    public String mostProfitableProduct() {
+        return reportDAO.mostProfitableProduct();
+    }
+
+    public String leastProfitableProduct() {
+        return reportDAO.leastProfitableProduct();
+    }
+
+    public ArrayList<Product> inventory() {
+        return admin.checkInventory();
+    }
+
+    public void changeOwnerPassword() {
+
         System.out.print("Enter old password: ");
         String oldPass = sc.nextLine();
 
@@ -101,16 +69,19 @@ public class Owner extends User{
         changePassword(oldPass, newPass);
     }
 
+    @Override
     public void logout() {
         super.logout();
     }
 
     public void login() {
-        System.out.println("=== login as an Owner ===");
-        System.out.println("Enter your password: ");
+
+        System.out.println("=== Login As Owner ===");
+        System.out.print("Enter password: ");
+
         String pass = sc.nextLine();
+
         super.login(pass);
     }
-    
-    
+
 }
