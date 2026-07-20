@@ -36,6 +36,21 @@ public class Salesman extends User {
         }
     }
 
+    public void checkDeliveredOrders() {
+
+        ArrayList<Integer> orders = viewDeliveredOrders();
+
+        if (orders.isEmpty()) {
+
+            System.out.println("No Delivered Orders");
+            return;
+        }
+
+        for (Integer orderId : orders) {
+            System.out.println("Order ID: " + orderId);
+        }
+    }
+
     public Integer viewNextOrder() {
         return assignedOrders.peek();
     }
@@ -54,6 +69,15 @@ public class Salesman extends User {
         }
 
         return false;
+    }
+
+    public void updateOrder() {
+
+        if (deliverNextOrder()) {
+            System.out.println("Order Delivered");
+        } else {
+            System.out.println("No Orders To Deliver");
+        }
     }
 
     public boolean hasPendingOrders() {
@@ -76,14 +100,31 @@ public class Salesman extends User {
         return "Pending Orders: " + assignedOrders.size();
     }
 
+    public void showPendingOrders() {
+
+        if (!hasPendingOrders()) {
+
+            System.out.println("No Pending Orders");
+            return;
+        }
+
+        for (Integer orderId : viewAssignedOrders()) {
+            System.out.println("Order ID: " + orderId);
+        }
+    }
+
     public boolean markOrderDelivered(int orderId) {
         return orderDAO.markDelivered(orderId);
     }
 
     public String calculateSalary() {
-        return "Salary calculation pending implementation";
-    }
 
+        int deliveredOrders = viewDeliveredOrders().size();
+
+        int salary = deliveredOrders * COMMISSION;
+
+        return "Salary: " + salary;
+    }
     public void changeSalesmanPassword() {
 
         System.out.print("Enter old password: ");

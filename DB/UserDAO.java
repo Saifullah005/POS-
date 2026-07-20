@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 
 public class UserDAO {
 
-    public boolean registerUser( String name, String password, String role) {
+    public boolean registerUser(String name, String password, String role) {
 
         if (name == null || name.isBlank()) {
             return false;
@@ -20,8 +20,7 @@ public class UserDAO {
             return false;
         }
 
-        Connection con =
-                DBConnection.getConnection();
+        Connection con = DBConnection.getConnection();
 
         if (con == null) {
             return false;
@@ -29,12 +28,10 @@ public class UserDAO {
 
         try {
 
-            String sql =
-                    "INSERT INTO users(user_name, user_password, role) " +
+            String sql = "INSERT INTO users(user_name, user_password, role) " +
                     "VALUES (?, ?, ?)";
 
-            PreparedStatement st =
-                    con.prepareStatement(sql);
+            PreparedStatement st = con.prepareStatement(sql);
 
             st.setString(1, name);
             st.setString(2, password);
@@ -60,11 +57,9 @@ public class UserDAO {
                 role);
     }
 
-    public boolean loginUser(
-            String name,
-            String password) {
+    public boolean loginUser(int id, String password) {
 
-        if (name == null || name.isBlank()) {
+        if (id <= 0) {
             return false;
         }
 
@@ -80,14 +75,11 @@ public class UserDAO {
 
         try {
 
-            String sql = "SELECT * " +
-                    "FROM users " +
-                    "WHERE user_name=? " +
-                    "AND user_password=?";
+            String sql = "SELECT * FROM users WHERE user_id = ? AND user_password = ?";
 
             PreparedStatement st = con.prepareStatement(sql);
 
-            st.setString(1, name);
+            st.setInt(1, id);
             st.setString(2, password);
 
             ResultSet rs = st.executeQuery();
@@ -185,6 +177,40 @@ public class UserDAO {
         return null;
     }
 
+    public String getRole(int id) {
+
+        if (id <= 0) {
+            return null;
+        }
+
+        Connection con = DBConnection.getConnection();
+
+        if (con == null) {
+            return null;
+        }
+
+        try {
+
+            String sql = "SELECT role FROM users WHERE user_id = ?";
+
+            PreparedStatement st = con.prepareStatement(sql);
+
+            st.setInt(1, id);
+
+            ResultSet rs = st.executeQuery();
+
+            if (rs.next()) {
+
+                return rs.getString("role");
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return null;
+    }
     public int getId(
             String name,
             String password) {

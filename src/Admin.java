@@ -11,373 +11,347 @@ import DB.UserDAO;
 
 public class Admin extends User {
 
-    private UserDAO userDAO;
-    private ProductDAO productDAO;
-    private OrderDAO orderDAO;
-    private ReportDAO reportDAO;
+        private UserDAO userDAO;
+        private ProductDAO productDAO;
+        private OrderDAO orderDAO;
+        private ReportDAO reportDAO;
 
-    public Admin() {
+        public Admin() {
 
-        super();
+                super();
 
-        userDAO = new UserDAO();
-        productDAO = new ProductDAO();
-        orderDAO = new OrderDAO();
-        reportDAO = new ReportDAO();
-    }
-
-    public Admin(
-            int id,
-            String name,
-            String password) {
-
-        super(
-                id,
-                name,
-                password,
-                "ADMIN");
-
-        userDAO = new UserDAO();
-        productDAO = new ProductDAO();
-        orderDAO = new OrderDAO();
-        reportDAO = new ReportDAO();
-    }
-    public void addSalesMan() {
-
-        System.out.print("Enter name: ");
-        String name = sc.nextLine();
-
-        System.out.print("Enter password: ");
-        String pass = sc.nextLine();
-
-        boolean success =
-                userDAO.addUser(
-                        name,
-                        pass,
-                        "SALESMAN");
-
-        if (success) {
-
-            System.out.println(
-                    "Salesman added successfully.");
+                userDAO = new UserDAO();
+                productDAO = new ProductDAO();
+                orderDAO = new OrderDAO();
+                reportDAO = new ReportDAO();
         }
-        else {
 
-            System.out.println(
-                    "Failed to add salesman.");
+        public Admin(
+                        int id,
+                        String name,
+                        String password) {
+
+                super(
+                                id,
+                                name,
+                                password,
+                                "ADMIN");
+
+                userDAO = new UserDAO();
+                productDAO = new ProductDAO();
+                orderDAO = new OrderDAO();
+                reportDAO = new ReportDAO();
         }
-    }
 
-    
-    public void addProduct() {
+        public void addSalesMan() {
 
-        System.out.print(
-                "Enter product name: ");
+                System.out.print("Enter name: ");
+                String name = sc.nextLine();
 
-        String productName =
+                System.out.print("Enter password: ");
+                String pass = sc.nextLine();
+
+                boolean success = userDAO.addUser(
+                                name,
+                                pass,
+                                "SALESMAN");
+
+                if (success) {
+
+                        System.out.println(
+                                        "Salesman added successfully.");
+                } else {
+
+                        System.out.println(
+                                        "Failed to add salesman.");
+                }
+        }
+
+        public void addProduct() {
+
+                System.out.print(
+                                "Enter product name: ");
+
+                String productName = sc.nextLine();
+
+                System.out.print(
+                                "Enter expiry year: ");
+
+                int year = sc.nextInt();
+
+                System.out.print(
+                                "Enter expiry month: ");
+
+                int month = sc.nextInt();
+
+                System.out.print(
+                                "Enter expiry day: ");
+
+                int day = sc.nextInt();
+
+                LocalDate expiryDate;
+
+                try {
+
+                        expiryDate = LocalDate.of(
+                                        year,
+                                        month,
+                                        day);
+
+                } catch (DateTimeException e) {
+
+                        System.out.println(
+                                        "Invalid date.");
+
+                        return;
+                }
+
+                System.out.print(
+                                "Enter quantity: ");
+
+                int quantity = sc.nextInt();
+
+                System.out.print(
+                                "Enter cost price: ");
+
+                double costPrice = sc.nextDouble();
+
+                System.out.print(
+                                "Enter sale price: ");
+
+                double salePrice = sc.nextDouble();
+
                 sc.nextLine();
 
-        System.out.print(
-                "Enter expiry year: ");
+                Product product = new Product(
+                                0,
+                                quantity,
+                                salePrice,
+                                costPrice,
+                                productName,
+                                expiryDate);
 
-        int year =
-                sc.nextInt();
+                boolean success = productDAO.addProduct(
+                                product);
 
-        System.out.print(
-                "Enter expiry month: ");
+                if (success) {
 
-        int month =
-                sc.nextInt();
+                        System.out.println(
+                                        "Product added successfully.");
+                } else {
 
-        System.out.print(
-                "Enter expiry day: ");
-
-        int day =
-                sc.nextInt();
-
-        LocalDate expiryDate;
-
-        try {
-
-            expiryDate =
-                    LocalDate.of(
-                            year,
-                            month,
-                            day);
-
-        } catch (DateTimeException e) {
-
-            System.out.println(
-                    "Invalid date.");
-
-            return;
+                        System.out.println(
+                                        "Failed to add product.");
+                }
         }
 
-        System.out.print(
-                "Enter quantity: ");
+        public void addOrder() {
 
-        int quantity =
-                sc.nextInt();
+                System.out.println(
+                                "\n===== ADD PRODUCTS TO CART =====");
 
-        System.out.print(
-                "Enter cost price: ");
+                Order cart = new Order();
 
-        double costPrice =
-                sc.nextDouble();
+                cart.addProduct();
 
-        System.out.print(
-                "Enter sale price: ");
+                System.out.println(
+                                "\n===== CART DETAILS =====");
 
-        double salePrice =
-                sc.nextDouble();
+                System.out.println(
+                                cart.displayCart());
 
-        sc.nextLine();
+                double totalPrice = cart.getTotalOrderPrice();
 
-        Product product =
-                new Product(
-                        0,
-                        quantity,
-                        salePrice,
-                        costPrice,
-                        productName,
-                        expiryDate);
+                double totalProfit = cart.getTotalOrderProfit();
 
-        boolean success =
-                productDAO.addProduct(
-                        product);
+                int orderId = orderDAO.createOrder(
+                                LocalDate.now(),
+                                getId(),
+                                totalPrice,
+                                totalProfit);
 
-        if (success) {
+                if (orderId == -1) {
 
-            System.out.println(
-                    "Product added successfully.");
-        }
-        else {
+                        System.out.println(
+                                        "Failed to create order.");
 
-            System.out.println(
-                    "Failed to add product.");
-        }
-    }
+                        return;
+                }
 
-    public void addOrder() {
+                boolean success = orderDAO.saveCart(
+                                orderId,
+                                cart);
 
-        System.out.println(
-                "\n===== ADD PRODUCTS TO CART =====");
+                if (success) {
 
-        Order cart =
-                new Order();
+                        System.out.println(
+                                        "Order saved successfully.");
+                } else {
 
-        cart.addProduct();
+                        System.out.println(
+                                        "Failed to save order items.");
+                }
 
-        System.out.println(
-                "\n===== CART DETAILS =====");
-
-        System.out.println(
-                cart.displayCart());
-
-        double totalPrice =
-                cart.getTotalOrderPrice();
-
-        double totalProfit =
-                cart.getTotalOrderProfit();
-
-        int orderId =
-                orderDAO.createOrder(
-                        LocalDate.now(),
-                        getId(),
-                        totalPrice,
-                        totalProfit);
-
-        if (orderId == -1) {
-
-            System.out.println(
-                    "Failed to create order.");
-
-            return;
+                cart.clearCart();
         }
 
-        boolean success =
-                orderDAO.saveCart(
-                        orderId,
-                        cart);
+        public boolean assignOrderToSalesman(int orderId, int salesmanId) {
 
-        if (success) {
+                return orderDAO.assignSalesman(orderId, salesmanId);
 
-            System.out.println(
-                    "Order saved successfully.");
-        }
-        else {
-
-            System.out.println(
-                    "Failed to save order items.");
         }
 
-        cart.clearCart();
-    }
+        public void assignOrderToSalesman() {
 
-    public void assignOrderToSalesman(
-            int orderId,
-            int salesmanId) {
+                System.out.print("Enter Order ID: ");
+                int orderId = sc.nextInt();
 
-        boolean success =
-                orderDAO.assignSalesman(
-                        orderId,
-                        salesmanId);
+                System.out.print("Enter Salesman ID: ");
+                int salesmanId = sc.nextInt();
 
-        if (success) {
-
-            System.out.println(
-                    "Order assigned successfully.");
-        }
-        else {
-
-            System.out.println(
-                    "Failed to assign order.");
-        }
-    }
-
-    public ArrayList<Product> checkInventory() {
-        return productDAO.getAllProducts();
-    }
-    public String totalOrders() {
-
-        return reportDAO.totalOrders();
-    }
-
-    public String totalProfit() {
-
-        return reportDAO.totalProfit();
-    }
-
-    public String totalSales() {
-
-        return reportDAO.totalSales();
-    }
-
-    public String todaySales() {
-
-        return reportDAO.todaySales();
-    }
-
-    public String todayProfit() {
-
-        return reportDAO.todayProfit();
-    }
-
-    public String mostSellingProduct() {
-
-        return reportDAO.mostSellingProduct();
-    }
-
-    public String leastSellingProduct() {
-
-        return reportDAO.leastSellingProduct();
-    }
-
-    public String mostProfitableProduct() {
-
-        return reportDAO.mostProfitableProduct();
-    }
-
-    public String leastProfitableProduct() {
-
-        return reportDAO.leastProfitableProduct();
-    }
-
-    public void deleteProduct(
-            int productId) {
-
-        boolean success =
-                productDAO.removeProduct(
-                        productId);
-
-        if (success) {
-
-            System.out.println(
-                    "Product deleted.");
-        }
-        else {
-
-            System.out.println(
-                    "Failed to delete product.");
-        }
-    }
-
-    public void deleteOrder(
-            int orderId) {
-
-        boolean success =
-                orderDAO.deleteOrder(
-                        orderId);
-
-        if (success) {
-
-            System.out.println(
-                    "Order deleted.");
-        }
-        else {
-
-            System.out.println(
-                    "Failed to delete order.");
-        }
-    }
-
-    public void deleteUser(
-            int userId) {
-
-        boolean success =
-                userDAO.deleteUser(
-                        userId);
-
-        if (success) {
-
-            System.out.println(
-                    "User deleted.");
-        }
-        else {
-
-            System.out.println(
-                    "Failed to delete user.");
-        }
-    }
-
-
-    public void changeAdminPassword() {
-
-        System.out.print(
-                "Enter old password: ");
-
-        String oldPass =
                 sc.nextLine();
 
-        System.out.print(
-                "Enter new password: ");
+                boolean success = assignOrderToSalesman(orderId, salesmanId);
+                if (success) {
+                        System.out.println("Order assigned successfully.");
+                } else {
+                        System.out.println("Failed to assign order.");
+                }
+        }
 
-        String newPass =
-                sc.nextLine();
+        public ArrayList<Product> checkInventory() {
+                return productDAO.getAllProducts();
+        }
 
-        changePassword(
-                oldPass,
-                newPass);
-    }
+        public String totalOrders() {
 
-    
-    @Override
-    public void logout() {
+                return reportDAO.totalOrders();
+        }
 
-        super.logout();
-    }
+        public String totalProfit() {
 
-    public void login() {
+                return reportDAO.totalProfit();
+        }
 
-        System.out.println(
-                "=== login as admin ===");
+        public String totalSales() {
 
-        System.out.print(
-                "Enter password: ");
+                return reportDAO.totalSales();
+        }
 
-        String pass =
-                sc.nextLine();
+        public String todaySales() {
 
-        super.login(pass);
-    }
+                return reportDAO.todaySales();
+        }
+
+        public String todayProfit() {
+
+                return reportDAO.todayProfit();
+        }
+
+        public String mostSellingProduct() {
+
+                return reportDAO.mostSellingProduct();
+        }
+
+        public String leastSellingProduct() {
+
+                return reportDAO.leastSellingProduct();
+        }
+
+        public String mostProfitableProduct() {
+
+                return reportDAO.mostProfitableProduct();
+        }
+
+        public String leastProfitableProduct() {
+
+                return reportDAO.leastProfitableProduct();
+        }
+
+        public void deleteProduct(
+                        int productId) {
+
+                boolean success = productDAO.removeProduct(
+                                productId);
+
+                if (success) {
+
+                        System.out.println(
+                                        "Product deleted.");
+                } else {
+
+                        System.out.println(
+                                        "Failed to delete product.");
+                }
+        }
+
+        public void deleteOrder(
+                        int orderId) {
+
+                boolean success = orderDAO.deleteOrder(
+                                orderId);
+
+                if (success) {
+
+                        System.out.println(
+                                        "Order deleted.");
+                } else {
+
+                        System.out.println(
+                                        "Failed to delete order.");
+                }
+        }
+
+        public void deleteUser(
+                        int userId) {
+
+                boolean success = userDAO.deleteUser(
+                                userId);
+
+                if (success) {
+
+                        System.out.println(
+                                        "User deleted.");
+                } else {
+
+                        System.out.println(
+                                        "Failed to delete user.");
+                }
+        }
+
+        public void changeAdminPassword() {
+
+                System.out.print(
+                                "Enter old password: ");
+
+                String oldPass = sc.nextLine();
+
+                System.out.print(
+                                "Enter new password: ");
+
+                String newPass = sc.nextLine();
+
+                changePassword(
+                                oldPass,
+                                newPass);
+        }
+
+        @Override
+        public void logout() {
+
+                super.logout();
+        }
+
+        public void login() {
+
+                System.out.println(
+                                "=== login as admin ===");
+
+                System.out.print(
+                                "Enter password: ");
+
+                String pass = sc.nextLine();
+
+                super.login(pass);
+        }
 }
